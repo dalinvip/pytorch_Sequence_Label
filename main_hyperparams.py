@@ -20,7 +20,10 @@ from DataLoader import DataConll2003_Loader_NER
 from DataLoader.Load_Pretrained_Embed import *
 from DataLoader.Common import unkkey, paddingkey
 from models.BiLSTM import *
+from models.CRF import *
+from models.BiLSTM_CRF import *
 import train_conll2003
+import train_conll2003_CRF
 import random
 import shutil
 import hyperparams as hy
@@ -48,6 +51,7 @@ parser.add_argument('-shuffle', action='store_true', default=hyperparams.shuffle
 parser.add_argument('-epochs_shuffle', action='store_true', default=hyperparams.epochs_shuffle, help='shuffle the data every epoch' )
 # model params
 parser.add_argument("-BiLSTM", action='store_true', default=hyperparams.BiLSTM, help="BiLSTM model")
+parser.add_argument("-BiLSTM_CRF", action='store_true', default=hyperparams.BiLSTM_CRF, help="BiLSTM_CRF model")
 parser.add_argument('-embed_dim', type=int, default=hyperparams.embed_dim, help='embedding dim')
 parser.add_argument('-dropout', type=float, default=hyperparams.dropout, help='dropout')
 parser.add_argument('-dropout_embed', type=float, default=hyperparams.dropout_embed, help='dropout')
@@ -90,12 +94,14 @@ def load_Conll2003_NER(args):
                                                              shuffle=args.shuffle)
     # create the alphabet
     create_alphabet = CreateAlphabet(min_freq=args.min_freq)
-    create_alphabet.build_vocab(train_data=train_data, dev_data=dev_data, test_data=test_data)
+    create_alphabet.build_vocab(train_data=train_data)
     # create iterator
     create_iter = Iterators()
-    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, len(dev_data), len(test_data)],
-                                                       data=[train_data, dev_data, test_data], operator=create_alphabet,
-                                                       args=args)
+    train_iter, dev_iter, test_iter = create_iter.createIterator(batch_size=[args.batch_size, args.dev_batch_size,
+                                                                             args.test_batch_size],
+                                                                 data=[train_data, dev_data, test_data],
+                                                                 operator=create_alphabet,
+                                                                 args=args)
     return train_iter, dev_iter, test_iter, create_alphabet
 
 
@@ -133,9 +139,9 @@ def main():
 
     if args.word_Embedding:
         print("Using Pre_Trained Embedding.")
-        pretrain_embed = load_pretrained_emb_zeros(path=args.word_Embedding_Path,
-                                                   text_field_words_dict=create_alphabet.word_alphabet.id2words,
-                                                   pad=paddingkey)
+        pretrain_embed = load_pretrained_emb_avg(path=args.word_Embedding_Path,
+                                                 text_field_words_dict=create_alphabet.word_alphabet.id2words,
+                                                 pad=paddingkey)
         args.pretrained_weight = pretrain_embed
 
     # print params
@@ -147,6 +153,12 @@ def main():
         model = BiLSTM(args)
         shutil.copy("./models/BiLSTM.py", args.save_dir)
         print(model)
+    elif args.BiLSTM_CRF is True:
+        print("loading BiLSTM_CRF model......")
+        bilstm = BiLSTM(args)
+        crf = CRF(args)
+        model = BiLSTM_CRF(BiLSTM=bilstm, CRF=crf, args=args)
+        print(model)
     if args.use_cuda is True:
         print("Using Cuda To Speed Up......")
         model = model.cuda()
@@ -154,7 +166,10 @@ def main():
     if os.path.exists("./Test_Result.txt"):
         os.remove("./Test_Result.txt")
     print("Training Start......")
-    train_conll2003.train(train_iter=train_iter, dev_iter=dev_iter, test_iter=test_iter, model=model, args=args)
+    if args.BiLSTM is True:
+        train_conll2003.train(train_iter=train_iter, dev_iter=dev_iter, test_iter=test_iter, model=model, args=args)
+    elif args.BiLSTM_CRF is True:
+        train_conll2003_CRF.train(train_iter=train_iter, dev_iter=dev_iter, test_iter=test_iter, model=model, args=args)
 
 
 if __name__ == "__main__":

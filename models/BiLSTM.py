@@ -51,9 +51,9 @@ class BiLSTM(nn.Module):
         init.xavier_uniform(self.linear.weight)
         self.linear.bias.data.uniform_(-np.sqrt(6 / (self.hidden_size + 1)), np.sqrt(6 / (self.hidden_size + 1)))
 
-    def forward(self, batch_features):
-        word = batch_features.word_features
-        x = self.embed(word)  # (N,W,D)
+    def forward(self, words):
+        # word = batch_features.word_features
+        x = self.embed(words)  # (N,W,D)
         x = self.dropout_embed(x)
         cated_embed, _ = self.bilstm(x)
         cated_embed = F.tanh(cated_embed)

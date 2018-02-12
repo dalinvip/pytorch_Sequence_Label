@@ -57,10 +57,6 @@ class EvalPRF:
     def evalPRF(self, predict_labels, gold_labels, eval):
         gold_ent = self.get_ent(gold_labels)
         predict_ent = self.get_ent(predict_labels)
-        # print("\npredict_labels", predict_labels)
-        # print("predict_ent", predict_ent)
-        # print("gold_labels", gold_labels)
-        # print("gold_ent", gold_ent)
         eval.predict_num += len(predict_ent)
         eval.gold_num += len(gold_ent)
 
@@ -69,8 +65,6 @@ class EvalPRF:
             if p in gold_ent:
                 count += 1
                 eval.correct_num += 1
-        # print("count", count)
-        # print("correct_num", eval.correct_num)
 
     def get_ent(self, labels):
         idx = 0

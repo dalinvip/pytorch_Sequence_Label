@@ -85,7 +85,7 @@ def calculate_oov(path, text_field_words_dict, pad=None, set_padding=False):
     print('The number of wordsDict is {} \nThe dim of pretrained embedding is {}\n'.format(str(word_count),
                                                                                            str(embedding_dim)))
     embeddings = np.zeros((int(word_count), int(embedding_dim)))
-    iov_num = 0
+    iv_num = 0
     oov_num = 0
     word_list = []
     with open(path, encoding='utf-8') as f:
@@ -101,11 +101,11 @@ def calculate_oov(path, text_field_words_dict, pad=None, set_padding=False):
     for w in text_field_words_dict:
         # print(w)
         if w in word_list:
-            iov_num += 1
+            iv_num += 1
         else:
             oov_num += 1
 
-    print("\niov_num {} oov_num {} oov_radio {}".format(iov_num, oov_num, round((oov_num / (oov_num + iov_num)), 2)))
+    print("\niov_num {} oov_num {} oov_radio {}".format(iv_num, oov_num, round((oov_num / (oov_num + iv_num)), 2)))
 
 
 def load_pretrained_emb_avg(path, text_field_words_dict, pad=None, set_padding=False):

@@ -75,11 +75,15 @@ class DataLoader():
                     inst.words_size = len(inst.words)
                     insts.append(inst)
                     inst = Instance()
+                elif line == "":
+                    continue
                 else:
                     line = line.strip().split(" ")
                     # print(line)
                     assert len(line) == 4, "Error Format"
                     word = line[0]
+                    if word == "-DOCSTART-":
+                        continue
                     # word = self.clean_str(word)
                     # if word is "":
                     #     continue

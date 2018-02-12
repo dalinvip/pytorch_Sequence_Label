@@ -33,12 +33,13 @@ class Hyperparams():
         self.epochs_shuffle = True
 
         # model
-        self.BiLSTM = True
-        self.embed_dim = 100
+        self.BiLSTM = False
+        self.BiLSTM_CRF = True
+        self.embed_dim = 300
         self.dropout = 0.5
         self.dropout_embed = 0.3
         self.clip_max_norm = 10
-        self.rnn_input_size = 100
+        self.rnn_input_size = 300
         self.rnn_hidden_size = 100
 
         # select optim algorhtim for train
@@ -50,8 +51,8 @@ class Hyperparams():
         # self.weight_decay = 0   # default value is zero in Adam SGD
         self.epochs = 1000
         self.train_batch_size = 16
-        self.dev_batch_size = None  # "None meaning not use batch for dev"
-        self.test_batch_size = None  # "None meaning not use batch for test"
+        self.dev_batch_size = 1  # "None meaning not use batch for dev"
+        self.test_batch_size = 1  # "None meaning not use batch for test"
         self.log_interval = 1
         self.dev_interval = 100
         self.test_interval = 100
@@ -64,7 +65,8 @@ class Hyperparams():
 
         # word_Embedding
         self.word_Embedding = True
-        self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
+        # self.word_Embedding_Path = "./Pretrain_Embedding/enwiki.emb.source_Conll2003_OOV.txt"
+        self.word_Embedding_Path = "./Pretrain_Embedding/glove.42B.300d.conll2003.txt"
 
         # GPU
         self.use_cuda = False

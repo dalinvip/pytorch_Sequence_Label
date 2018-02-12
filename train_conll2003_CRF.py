@@ -29,9 +29,9 @@ def train(train_iter, dev_iter, test_iter, model, args):
     optimizer = None
     if args.Adam is True:
         print("Adam Training......")
-        # optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr,
-                                     weight_decay=args.weight_decay)
+        optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+        # optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=args.lr,
+        #                              weight_decay=args.weight_decay)
 
     file = open("./Test_Result.txt", encoding="UTF-8", mode="a", buffering=1)
     best_fscore = Best_Result()
@@ -50,10 +50,7 @@ def train(train_iter, dev_iter, test_iter, model, args):
         model.train()
         for batch_count, batch_features in enumerate(train_iter):
             model.zero_grad()
-            logit = model.forward(batch_features, train=True)
-            loss_logit = logit.view(logit.size(0) * logit.size(1), logit.size(2))
-            loss = F.cross_entropy(loss_logit, batch_features.label_features)
-            # print(loss)
+            loss = model.forward(batch_features, train=True)
             loss.backward()
             optimizer.step()
             steps += 1
@@ -70,31 +67,16 @@ def train(train_iter, dev_iter, test_iter, model, args):
 def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=False):
     # eval time
     eval_PRF = EvalPRF()
-    gold_labels = []
-    predict_labels = []
     for batch_features in data_iter:
-        logit = model(batch_features)
-        for id_batch in range(batch_features.batch_length):
-            inst = batch_features.inst[id_batch]
-            # eval_PRF = EvalPRF()
-            predict_label = []
-            for id_word in range(inst.words_size):
-                maxId = getMaxindex(logit[id_batch][id_word], logit.size(2), args)
-                # if maxId == args.create_alphabet.label_unkId:
-                #     continue
-                predict_label.append(args.create_alphabet.label_alphabet.from_id(maxId))
-            gold_labels.append(inst.labels)
-            predict_labels.append(predict_label)
-            # print(inst.labels)
-            # print(predict_labels)
-            eval_PRF.evalPRF(predict_labels=predict_label, gold_labels=inst.labels, eval=eval_instance)
-    # p, r, f = entity_evalPRF_exact(gold_labels=gold_labels, predict_labels=predict_labels)
-    #
+        best_path = model.forward(batch_features, train=False)
+        predictLabels = []
+        inst = batch_features.inst[0]
+        for idx in range(len(best_path)):
+            predictLabels.append(args.create_alphabet.label_alphabet.from_id(best_path[idx]))
+        eval_PRF.evalPRF(predict_labels=predictLabels, gold_labels=inst.labels, eval=eval_instance)
+
     # calculate the F-Score
     p, r, f = eval_instance.getFscore()
-    # p = p * 100
-    # f = f * 100
-    # r = r * 100
     test_flag = "Test"
     if test is False:
         print("\n")
@@ -127,16 +109,12 @@ def eval(data_iter, model, eval_instance, file, best_fscore, epoch, args, test=F
 
 
 def getMaxindex(model_out, label_size, args):
-    # print(model_out.size())
-    # print(label_size)
-    # print(model_out)
     max = model_out.data[0]
     maxIndex = 0
     for idx in range(1, label_size):
         if model_out.data[idx] > max:
             max = model_out.data[idx]
             maxIndex = idx
-    # print(maxIndex)
     return maxIndex
 
 
